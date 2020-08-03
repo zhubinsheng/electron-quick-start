@@ -1,0 +1,30 @@
+{
+  "name": "electron-quick-start",
+  "version": "1.0.0",
+  "description": "A minimal Electron application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "packall": "npm run pack:linux  && npm run pack:win",
+    "pack:linux": "electron-packager . 808_Pic_Biog --platform=linux --out ./release --arch=x64 --overwrite --icon=./public/img/icon.png",
+    "pack:win": "electron-packager . 808_Pic_Biog --platform=win32 --out ../release --arch=x64 --overwrite --icon=./public/img/icon.png",
+    "packageLinux": "electron-packager . 'Hosts' --platform=linux --arch=x64 --out=./dist --asar --app-version=2.0.1"
+  },
+  "repository": "https://github.com/electron/electron-quick-start",
+  "keywords": [
+    "Electron",
+    "quick",
+    "start",
+    "tutorial",
+    "demo"
+  ],
+  "author": "GitHub",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "body-parser": "^1.18.3",
+    "electron": "^9.1.1",
+    "express": "^4.16.4",
+    "paper": "^0.12.11",
+    "socket.io": "^2.1.1"
+  }
+}

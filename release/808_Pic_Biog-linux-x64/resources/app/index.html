@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <title>Hello World!</title>
+    <style>
+        .container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .img {
+            width: 100%;
+        }
+    </style>
+  </head>
+  <body>
+    
+    We are using Node.js <span id="node-version"></span>,
+    Chromium <span id="chrome-version"></span>,
+    and Electron <span id="electron-version"></span>.
+    
+    <!-- You can also require other files to run in this process -->
+    <script src="./renderer.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/knockout/3.5.1/knockout-latest.min.js"></script>
+    <div class="container">
+      <canvas id="canvas" style="width:100%;height:100%;"></canvas>
+      <p>Fps : <strong data-bind="text: numberOfClicks"></strong></p>
+      <img id="img" src="./zwt.jpg">
+  </div>
+
+  <script>
+      // const img = document.getElementById('img');
+      // const socket = io();
+      // socket.on('image', image => {
+      //     let arrayBufferView = new Uint8Array(image);
+      //     let blob = new Blob([arrayBufferView], { type: 'image/jpeg' });
+      //     let imageUrl = window.URL.createObjectURL(blob);
+      //     img.src = imageUrl;
+      // });
+  </script>
+    <script type="text/javascript">
+
+      // this.canvas = document.getElementById('canvas');
+      // this.ctx = this.canvas.getContext('2d');
+      
+      // const canvas_img = new Image()
+      // canvas_img.onload = () => ctx.drawImage(canvas_img, 0, 0)
+      // canvas_img.onerror = err => { throw err }
+      
+      // ctx.fillStyle = '#09F'       // Make changes to the settings
+      // ctx.globalAlpha = 0.5;    
+      // ctx.fillRect(0,0,90,90);   // Draw a rectangle with new settings
+
+      // ctx.restore();
+
+      // var ko = require("knockout");
+      var viewModel = {
+          numberOfClicks: ko.observable(0),
+      };
+      ko.applyBindings(viewModel);
+
+      window.onload=function(){
+        var self = this;
+      console.log("start js")
+      const fs = require('fs');
+      // const express = require('express');
+      // const app = express();
+      // const http = require('http').Server(app);
+      // const io = require('socket.io')(http);
+      const dgram = require('dgram');
+      const { Server } = require('http');
+  
+      const udp_server = dgram.createSocket('udp4')
+  
+      const img = document.getElementById('img');
+      
+      const ioClients = [];
+      const img_buf = Buffer.alloc(1024 * 1024);
+      var count = 0;
+      var seq = 0;
+  
+      // app.use(express.static('public'));
+  
+      // app.get('/', (req, res) => {
+      //     res.sendFile('index.html');
+      // });
+  
+      // io.on('connection', socket => {
+      //     console.log('New io connection');
+      //     ioClients.push(socket);
+  
+      //     socket.on('disconnect', () => {
+      //         console.log('An io client disconnected');
+      //         ioClients.splice(ioClients.indexOf(socket), 1);
+      //     });
+      // })
+  
+      // http.listen(3006, () => {
+      //     console.log('HTTP server listening on *:3006');
+      // });
+  
+      const MJPEG_OFFSET = 0
+      udp_server.on('message', (msg, rinfo) => {
+          console.log(`New UDP msg len ${msg.length} ${count}`)
+          msg.copy(img_buf, count * 60 * 1024, 8);
+          count++;
+          if (msg[0] == 8) {
+              seq++;
+              count = 0;
+              let arrayBufferView = new Uint8Array(Buffer.from(img_buf.slice(MJPEG_OFFSET)));
+              let blob = new Blob([arrayBufferView], { type: 'image/jpeg' });
+              let imageUrl = window.URL.createObjectURL(blob);
+              img.src = imageUrl;
+              // for (let client of ioClients)
+                  // client.emit('image', Buffer.from(img_buf.slice(MJPEG_OFFSET)));
+                  
+              img_buf.fill(0, 0, img_buf.length, 'hex');
+              // canvas_img.src = imageUrl
+          }
+      });
+  
+      udp_server.on('listening', () => {
+          const address = udp_server.address();
+          console.log(`UDP server listening ${address.address}:${address.port}`);
+      });
+  
+      var HOST = '127.0.0.1'
+      udp_server.bind(8802,HOST);
+  
+      const util = require('util');
+      const setIntervalPromise = util.promisify(setInterval);
+      var last_seq = 0;
+      console.log(`mFps is : `+self.mFps);
+      setIntervalPromise((()=> {
+          if ((seq - last_seq) < 80 && seq != last_seq) {
+              var fps = seq - last_seq;
+              console.log(`fps is : `+fps);
+              this.viewModel.numberOfClicks(fps);
+          }
+          last_seq = seq;
+      }) , 1000);
+      }
+      
+    </script>
+  </body>
+
+</html>
